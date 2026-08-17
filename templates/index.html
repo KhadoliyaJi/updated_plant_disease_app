@@ -1,63 +1,1251 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Plant Disease Detection</title>
+    <title>Plant Disease Detection AI | Rahul Khadoliya</title>
+
+    <meta name="description"
+          content="AI-powered plant disease detection using a customized CNN and TensorFlow Lite.">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         Roboto, Arial, sans-serif;
+            background: #f6f8f7;
+            color: #17231d;
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .container {
+            width: min(1120px, 92%);
+            margin: auto;
+        }
+
+        /* ---------------- NAVBAR ---------------- */
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e4e9e6;
+        }
+
+        .nav-inner {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #176b3a;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            font-size: 0.92rem;
+            color: #526058;
+        }
+
+        .nav-links a:hover {
+            color: #176b3a;
+        }
+
+        /* ---------------- HERO ---------------- */
+
+        .hero {
+            padding: 90px 0 75px;
+            background:
+                radial-gradient(circle at 90% 20%, #dff4e6 0, transparent 28%),
+                radial-gradient(circle at 10% 70%, #e7f5ec 0, transparent 25%),
+                #f6f8f7;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 7px 14px;
+            border-radius: 30px;
+            background: #e1f3e7;
+            color: #176b3a;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 22px;
+        }
+
+        .hero h1 span {
+            color: #20864b;
+        }
+
+        .hero-description {
+            font-size: 1.08rem;
+            color: #617067;
+            max-width: 620px;
+            margin-bottom: 28px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: #176b3a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0f542c;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            border-color: #d6dfd9;
+            color: #34443b;
+        }
+
+        .btn-secondary:hover {
+            border-color: #176b3a;
+        }
+
+        /* ---------------- UPLOAD CARD ---------------- */
+
+        .detector-card {
+            background: white;
+            border: 1px solid #e0e7e2;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(24, 63, 39, 0.10);
+        }
+
+        .detector-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .detector-subtitle {
+            color: #718078;
+            font-size: 0.9rem;
+            margin-bottom: 22px;
+        }
+
+        .upload-box {
+            border: 2px dashed #b9d7c2;
+            background: #f7fbf8;
+            border-radius: 17px;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-box input {
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .predict-button {
+            width: 100%;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .result {
+            margin-top: 22px;
+            padding: 20px;
+            border-radius: 15px;
+            background: #edf8f0;
+            border: 1px solid #c9e7d1;
+        }
+
+        .result-label {
+            font-size: 0.78rem;
+            color: #5d7064;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .result-disease {
+            color: #176b3a;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 5px 0;
+        }
+
+        .confidence {
+            font-weight: 700;
+        }
+
+        .error {
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #fff0f0;
+            color: #a52d2d;
+        }
+
+        /* ---------------- SECTIONS ---------------- */
+
+        section {
+            padding: 85px 0;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 45px;
+        }
+
+        .section-heading .eyebrow {
+            color: #20864b;
+            font-weight: 800;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .section-heading h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.15;
+            margin: 8px 0 12px;
+        }
+
+        .section-heading p {
+            color: #68766e;
+        }
+
+        /* ---------------- HOW IT WORKS ---------------- */
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .step {
+            background: white;
+            border: 1px solid #e2e8e4;
+            border-radius: 18px;
+            padding: 28px;
+        }
+
+        .step-number {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: #e4f4e9;
+            color: #176b3a;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
+        .step h3 {
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            color: #6b786f;
+            font-size: 0.94rem;
+        }
+
+        /* ---------------- STATS ---------------- */
+
+        .stats-section {
+            background: #173b28;
+            color: white;
+        }
+
+        .stats-section .section-heading p {
+            color: #b8cbbf;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 25px 15px;
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .stat span {
+            color: #b9cabe;
+            font-size: 0.85rem;
+        }
+
+        /* ---------------- DATASET ---------------- */
+
+        .dataset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .info-card {
+            background: white;
+            border: 1px solid #e1e7e3;
+            border-radius: 18px;
+            padding: 28px;
+        }
+
+        .info-card h3 {
+            margin-bottom: 14px;
+        }
+
+        .info-card p {
+            color: #69766f;
+        }
+
+        .info-list {
+            list-style: none;
+        }
+
+        .info-list li {
+            padding: 9px 0;
+            border-bottom: 1px solid #edf0ee;
+            color: #536159;
+        }
+
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+
+        .info-list strong {
+            color: #26362d;
+        }
+
+        /* ---------------- TECHNOLOGIES ---------------- */
+
+        .tech-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tech {
+            padding: 10px 16px;
+            background: white;
+            border: 1px solid #dfe7e2;
+            border-radius: 30px;
+            font-weight: 700;
+            color: #3f5147;
+        }
+
+        /* ---------------- DISEASES ---------------- */
+
+        .diseases {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .disease {
+            background: white;
+            border: 1px solid #e2e8e4;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.83rem;
+            color: #526057;
+        }
+
+        /* ---------------- RESEARCH ---------------- */
+
+        .research-card {
+            max-width: 900px;
+            margin: auto;
+            padding: 38px;
+            background: white;
+            border: 1px solid #e0e7e2;
+            border-radius: 20px;
+        }
+
+        .research-card h3 {
+            font-size: 1.45rem;
+            margin-bottom: 10px;
+        }
+
+        .research-meta {
+            color: #20864b;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .research-card p {
+            color: #647169;
+        }
+
+        /* ---------------- ABOUT ---------------- */
+
+        .about {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .about h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .about p {
+            color: #65726a;
+            margin-bottom: 18px;
+        }
+
+        .about-highlight {
+            background: #eaf6ed;
+            padding: 25px;
+            border-radius: 16px;
+            border-left: 4px solid #20864b;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        /* ---------------- FOOTER ---------------- */
+
+        footer {
+            background: #10271b;
+            color: #d9e5dd;
+            padding: 35px 0;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.9rem;
+            color: #9eb2a5;
+        }
+
+        footer strong {
+            color: white;
+        }
+
+        /* ---------------- RESPONSIVE ---------------- */
+
+        @media (max-width: 850px) {
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-grid,
+            .dataset-grid,
+            .about {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding-top: 60px;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .diseases {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            h1 {
+                letter-spacing: -1px;
+            }
+
+            section {
+                padding: 60px 0;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .diseases {
+                grid-template-columns: 1fr;
+            }
+
+            .detector-card {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Plant Disease Detection</h1>
+<!-- ================= NAVBAR ================= -->
 
-    <p>
-        Upload a plant leaf image to identify the disease.
-    </p>
+<nav>
+    <div class="container nav-inner">
 
-    <form method="POST" enctype="multipart/form-data">
+        <a href="#" class="logo">🌿 Plant Disease AI</a>
 
-        <input
-            type="file"
-            name="image"
-            accept="image/*"
-            required
-        >
+        <div class="nav-links">
+            <a href="#how-it-works">How It Works</a>
+            <a href="#model">Model</a>
+            <a href="#diseases">Diseases</a>
+            <a href="#research">Research</a>
+            <a href="#about">About</a>
+        </div>
 
-        <button type="submit">
-            Predict Disease
-        </button>
+    </div>
+</nav>
 
-    </form>
 
-    {% if error %}
+<!-- ================= HERO ================= -->
 
-        <p style="color: red;">
-            {{ error }}
+<header class="hero">
+
+    <div class="container hero-grid">
+
+        <div>
+
+            <div class="badge">
+                AI-Powered Plant Disease Detection
+            </div>
+
+            <h1>
+                Identify plant diseases with
+                <span>Deep Learning.</span>
+            </h1>
+
+            <p class="hero-description">
+                Upload an image of a plant leaf and let a customized
+                Convolutional Neural Network analyze it across
+                38 plant health categories.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#detector" class="btn btn-primary">
+                    🌱 Try the Detector
+                </a>
+
+                <a href="#model" class="btn btn-secondary">
+                    Explore the Model
+                </a>
+            </div>
+
+        </div>
+
+
+        <!-- DETECTOR -->
+
+        <div class="detector-card" id="detector">
+
+            <div class="detector-title">
+                🔍 Analyze a Leaf
+            </div>
+
+            <div class="detector-subtitle">
+                Upload a clear image of a plant leaf.
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+
+                <div class="upload-box">
+
+                    <div class="upload-icon">📷</div>
+
+                    <strong>Select a leaf image</strong>
+
+                    <p style="color:#718078;font-size:0.85rem;">
+                        JPG, JPEG or PNG
+                    </p>
+
+                    <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary predict-button">
+                        Predict Disease
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            {% if error %}
+
+                <div class="error">
+                    {{ error }}
+                </div>
+
+            {% endif %}
+
+
+            {% if prediction %}
+
+                <div class="result">
+
+                    <div class="result-label">
+                        Prediction
+                    </div>
+
+                    <div class="result-disease">
+                        {{ prediction }}
+                    </div>
+
+                    <div class="confidence">
+                        Confidence:
+                        {{ "%.2f"|format(confidence) }}%
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- ================= HOW IT WORKS ================= -->
+
+<section id="how-it-works">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div class="eyebrow">Simple workflow</div>
+
+            <h2>How does it work?</h2>
+
+            <p>
+                The application takes a leaf image and passes it through
+                the same preprocessing and neural-network pipeline used
+                during model evaluation.
+            </p>
+
+        </div>
+
+
+        <div class="steps">
+
+            <div class="step">
+
+                <div class="step-number">01</div>
+
+                <h3>Upload</h3>
+
+                <p>
+                    Select a clear image of the plant leaf you want to
+                    analyze.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">02</div>
+
+                <h3>Analyze</h3>
+
+                <p>
+                    The image is converted to RGB, resized to
+                    128 × 128 pixels and processed by the CNN.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">03</div>
+
+                <h3>Get the Result</h3>
+
+                <p>
+                    The model returns the most likely class together
+                    with its prediction confidence.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= MODEL STATS ================= -->
+
+<section class="stats-section" id="model">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div class="eyebrow">Model performance</div>
+
+            <h2>Built for efficient inference</h2>
+
+            <p>
+                The deployed version uses TensorFlow Lite to reduce
+                deployment size while preserving the trained model's
+                prediction behavior.
+            </p>
+
+        </div>
+
+
+        <div class="stats">
+
+            <div class="stat">
+                <strong>38</strong>
+                <span>Plant Classes</span>
+            </div>
+
+            <div class="stat">
+                <strong>128×128</strong>
+                <span>Input Resolution</span>
+            </div>
+
+            <div class="stat">
+                <strong>1.25M</strong>
+                <span>Model Parameters</span>
+            </div>
+
+            <div class="stat">
+                <strong>4.78 MB</strong>
+                <span>TFLite Model</span>
+            </div>
+
+        </div>
+
+        <br><br>
+
+        <div class="stats">
+
+            <div class="stat">
+                <strong>96.97%</strong>
+                <span>Keras Test Accuracy · 32/33</span>
+            </div>
+
+            <div class="stat">
+                <strong>100%</strong>
+                <span>TFLite Test Accuracy · 33/33</span>
+            </div>
+
+            <div class="stat">
+                <strong>87K+</strong>
+                <span>Dataset Images</span>
+            </div>
+
+            <div class="stat">
+                <strong>CNN</strong>
+                <span>Deep Learning Architecture</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= DATASET ================= -->
+
+<section>
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div class="eyebrow">Dataset & training</div>
+
+            <h2>Inside the training pipeline</h2>
+
+            <p>
+                The model was developed using the New Plant Diseases
+                Dataset and trained as a multiclass image-classification
+                problem.
+            </p>
+
+        </div>
+
+
+        <div class="dataset-grid">
+
+            <div class="info-card">
+
+                <h3>📊 Dataset</h3>
+
+                <ul class="info-list">
+
+                    <li>
+                        <strong>Dataset:</strong>
+                        New Plant Diseases Dataset
+                    </li>
+
+                    <li>
+                        <strong>Images:</strong>
+                        Approximately 87,000 RGB images
+                    </li>
+
+                    <li>
+                        <strong>Classes:</strong>
+                        38 healthy and diseased plant categories
+                    </li>
+
+                    <li>
+                        <strong>Split:</strong>
+                        80:20 training / validation
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <h3>🧠 Model</h3>
+
+                <ul class="info-list">
+
+                    <li>
+                        <strong>Architecture:</strong>
+                        Customized Convolutional Neural Network
+                    </li>
+
+                    <li>
+                        <strong>Framework:</strong>
+                        TensorFlow / Keras
+                    </li>
+
+                    <li>
+                        <strong>Input:</strong>
+                        128 × 128 × 3 RGB image
+                    </li>
+
+                    <li>
+                        <strong>Output:</strong>
+                        38-class prediction
+                    </li>
+
+                    <li>
+                        <strong>Parameters:</strong>
+                        1,251,654
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= TECHNOLOGY ================= -->
+
+<section style="background:#eef5f0;">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div class="eyebrow">Technology stack</div>
+
+            <h2>Built with</h2>
+
+        </div>
+
+
+        <div class="tech-grid">
+
+            <span class="tech">Python</span>
+            <span class="tech">TensorFlow</span>
+            <span class="tech">Keras</span>
+            <span class="tech">CNN</span>
+            <span class="tech">TensorFlow Lite</span>
+            <span class="tech">Flask</span>
+            <span class="tech">NumPy</span>
+            <span class="tech">Pillow</span>
+            <span class="tech">HTML</span>
+            <span class="tech">CSS</span>
+            <span class="tech">Git</span>
+            <span class="tech">GitHub</span>
+            <span class="tech">Vercel</span>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= DISEASES ================= -->
+
+<section id="diseases">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div class="eyebrow">Classification</div>
+
+            <h2>Supported plant conditions</h2>
+
+            <p>
+                The model supports 38 classes spanning multiple crops
+                and healthy/diseased conditions.
+            </p>
+
+        </div>
+
+
+        <div class="diseases">
+
+            <div class="disease">Apple — Apple Scab</div>
+            <div class="disease">Apple — Black Rot</div>
+            <div class="disease">Apple — Cedar Apple Rust</div>
+            <div class="disease">Apple — Healthy</div>
+
+            <div class="disease">Blueberry — Healthy</div>
+            <div class="disease">Cherry — Powdery Mildew</div>
+            <div class="disease">Cherry — Healthy</div>
+
+            <div class="disease">Corn — Cercospora Leaf Spot</div>
+            <div class="disease">Corn — Common Rust</div>
+            <div class="disease">Corn — Northern Leaf Blight</div>
+            <div class="disease">Corn — Healthy</div>
+
+            <div class="disease">Grape — Black Rot</div>
+            <div class="disease">Grape — Esca</div>
+            <div class="disease">Grape — Leaf Blight</div>
+            <div class="disease">Grape — Healthy</div>
+
+            <div class="disease">Orange — Citrus Greening</div>
+
+            <div class="disease">Peach — Bacterial Spot</div>
+            <div class="disease">Peach — Healthy</div>
+
+            <div class="disease">Bell Pepper — Bacterial Spot</div>
+            <div class="disease">Bell Pepper — Healthy</div>
+
+            <div class="disease">Potato — Early Blight</div>
+            <div class="disease">Potato — Late Blight</div>
+            <div class="disease">Potato — Healthy</div>
+
+            <div class="disease">Raspberry — Healthy</div>
+
+            <div class="disease">Soybean — Healthy</div>
+
+            <div class="disease">Squash — Powdery Mildew</div>
+
+            <div class="disease">Strawberry — Leaf Scorch</div>
+            <div class="disease">Strawberry — Healthy</div>
+
+            <div class="disease">Tomato — Bacterial Spot</div>
+            <div class="disease">Tomato — Early Blight</div>
+            <div class="disease">Tomato — Late Blight</div>
+            <div class="disease">Tomato — Leaf Mold</div>
+            <div class="disease">Tomato — Septoria Leaf Spot</div>
+            <div class="disease">Tomato — Spider Mites</div>
+            <div class="disease">Tomato — Target Spot</div>
+            <div class="disease">Tomato — Yellow Leaf Curl Virus</div>
+            <div class="disease">Tomato — Mosaic Virus</div>
+            <div class="disease">Tomato — Healthy</div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= RESEARCH ================= -->
+
+<section id="research" style="background:#eef5f0;">
+
+    <div class="container">
+
+        <div class="section-heading">
+
+            <div class="eyebrow">Research</div>
+
+            <h2>From project to research</h2>
+
+        </div>
+
+
+        <div class="research-card">
+
+            <h3>
+                “A Tailored Customized CNN for Crop Disease Detection”
+            </h3>
+
+            <div class="research-meta">
+                Rahul Khadoliya · First Author & Researcher
+            </div>
+
+            <p>
+                This work presents a customized Convolutional Neural
+                Network approach for automated crop disease detection.
+                The research explores image-based diagnosis using deep
+                learning and evaluates classification performance across
+                38 plant health categories.
+            </p>
+
+            <br>
+
+            <p>
+                The paper was presented at the International Conference
+                on Network Intelligence & Emerging Computational
+                Paradigms (ICNIECP 2026), Manipal University Jaipur,
+                on 11 July 2026.
+            </p>
+
+            <br>
+
+            <a
+                href="https://in.linkedin.com/in/rahul-khadoliya-471b90264"
+                target="_blank"
+                class="btn btn-secondary">
+                View Researcher Profile →
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ABOUT ================= -->
+
+<section id="about">
+
+    <div class="container about">
+
+        <div>
+
+            <div class="section-heading"
+                 style="text-align:left;margin:0 0 20px 0;">
+
+                <div class="eyebrow">Developer</div>
+
+                <h2>Hi, I'm Rahul Khadoliya.</h2>
+
+            </div>
+
+            <p>
+                I'm a Computer Science Engineering graduate with
+                hands-on experience in AI/ML, computer vision and
+                cloud technologies.
+            </p>
+
+            <p>
+                My work includes deep-learning systems, real-time
+                computer vision applications and deploying intelligent
+                models into usable applications.
+            </p>
+
+            <div class="about-highlight">
+
+                <strong>Current focus</strong>
+
+                <br>
+
+                AI/ML Engineering · Computer Vision ·
+                Deep Learning · Intelligent Applications
+
+            </div>
+
+
+            <div class="social-buttons">
+
+                <a
+                    href="https://github.com/KhadoliyaJi/updated_plant_disease_app"
+                    target="_blank"
+                    class="btn btn-primary">
+                    GitHub Repository
+                </a>
+
+                <a
+                    href="https://in.linkedin.com/in/rahul-khadoliya-471b90264"
+                    target="_blank"
+                    class="btn btn-secondary">
+                    LinkedIn
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="info-card">
+
+            <h3>Project highlights</h3>
+
+            <ul class="info-list">
+
+                <li>
+                    <strong>Field:</strong>
+                    Artificial Intelligence & Computer Vision
+                </li>
+
+                <li>
+                    <strong>Task:</strong>
+                    Multiclass plant disease classification
+                </li>
+
+                <li>
+                    <strong>Model:</strong>
+                    Customized CNN
+                </li>
+
+                <li>
+                    <strong>Deployment:</strong>
+                    Flask + TensorFlow Lite
+                </li>
+
+                <li>
+                    <strong>Developer:</strong>
+                    Rahul Khadoliya
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= DISCLAIMER ================= -->
+
+<section style="padding:35px 0;background:#fff8e8;">
+
+    <div class="container">
+
+        <p style="
+            text-align:center;
+            color:#766643;
+            font-size:0.85rem;
+        ">
+            <strong>Research & educational project:</strong>
+            Model predictions are intended for research and educational
+            purposes and should not be considered a substitute for
+            professional agricultural diagnosis.
         </p>
 
-    {% endif %}
+    </div>
+
+</section>
 
 
-    {% if prediction %}
+<!-- ================= FOOTER ================= -->
 
-        <hr>
+<footer>
 
-        <h2>Prediction</h2>
+    <div class="container">
 
         <p>
-            <strong>Disease:</strong>
-            {{ prediction }}
+            Built with Python, CNN & TensorFlow Lite by
+            <strong>Rahul Khadoliya</strong>.
         </p>
 
-        <p>
-            <strong>Confidence:</strong>
-            {{ "%.2f"|format(confidence) }}%
+        <p style="margin-top:7px;">
+            © 2026 Rahul Khadoliya · Plant Disease Detection AI
         </p>
 
-    {% endif %}
+    </div>
+
+</footer>
 
 </body>
-
 </html>
