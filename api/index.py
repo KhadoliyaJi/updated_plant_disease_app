@@ -1,23 +1,29 @@
 from flask import Flask, render_template, request
-import tensorflow as tf
+from ai_edge_litert.interpreter import Interpreter
 from PIL import Image
 import numpy as np
 import json
 import os
 
-app = Flask(
-    __name__,
-    template_folder=os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "templates"
-    )
+from flask import Flask, render_template, request
+from ai_edge_litert.interpreter import Interpreter
+from PIL import Image
+import numpy as np
+import json
+import os
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
 )
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates")
+)
 
 MODEL_PATH = os.path.join(
     BASE_DIR,
-    "plant_disease_model.keras"
+    "plant_disease_model.tflite"
 )
 
 CLASS_NAMES_PATH = os.path.join(
@@ -25,11 +31,18 @@ CLASS_NAMES_PATH = os.path.join(
     "class_names.json"
 )
 
-print("Loading model...")
+print("Loading TFLite model...")
 
-model = tf.keras.models.load_model(MODEL_PATH)
+interpreter = Interpreter(model_path=MODEL_PATH)
+interpreter.allocate_tensors()
 
-print("Model loaded successfully!")
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+input_index = input_details[0]["index"]
+output_index = output_details[0]["index"]
+
+print("TFLite model loaded successfully!")
 
 with open(CLASS_NAMES_PATH, "r") as f:
     class_names = json.load(f)
@@ -42,18 +55,31 @@ def predict_disease(image):
     image = image.convert("RGB")
     image = image.resize((128, 128))
 
-    image_array = np.array(image)
-    image_array = np.expand_dims(image_array, axis=0)
-
-    predictions = model.predict(
-        image_array,
-        verbose=0
+    image_array = np.array(
+        image,
+        dtype=np.float32
     )
 
-    predicted_index = np.argmax(predictions[0])
+    image_array = np.expand_dims(
+        image_array,
+        axis=0
+    )
+
+    interpreter.set_tensor(
+        input_index,
+        image_array
+    )
+
+    interpreter.invoke()
+
+    predictions = interpreter.get_tensor(
+        output_index
+    )[0]
+
+    predicted_index = np.argmax(predictions)
 
     confidence = float(
-        predictions[0][predicted_index]
+        predictions[predicted_index]
     ) * 100
 
     predicted_class = class_names[predicted_index]
@@ -88,7 +114,9 @@ def home():
 
                     image = Image.open(file)
 
-                    prediction, confidence = predict_disease(image)
+                    prediction, confidence = predict_disease(
+                        image
+                    )
 
                 except Exception as e:
 
